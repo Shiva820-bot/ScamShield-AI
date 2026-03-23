@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ScamShield AI — Threat Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/static.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Animated grid background -->
+<div class="bg-grid"></div>
+<div class="scan-line"></div>
+
+<!-- ── SIDEBAR ──────────────────────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="logo-block">
+    <div class="logo-icon">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <polygon points="18,2 34,10 34,26 18,34 2,26 2,10" stroke="#00f5ff" stroke-width="1.5" fill="none"/>
+        <polygon points="18,7 29,12.5 29,23.5 18,29 7,23.5 7,12.5" stroke="#00f5ff" stroke-width="1" fill="rgba(0,245,255,0.05)"/>
+        <path d="M18 12 L18 18 L22 22" stroke="#00f5ff" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="18" cy="18" r="2" fill="#00f5ff"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">ScamShield</div>
+      <div class="logo-sub">AI · v2.4.1</div>
+    </div>
+  </div>
+
+  <div class="status-badge">
+    <span class="pulse-dot"></span>
+    <span>System Online</span>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-item active" data-tab="scanner">
+      <span class="nav-icon">⬡</span>
+      <span>Email Scanner</span>
+      <span class="nav-arrow">›</span>
+    </button>
+    <button class="nav-item" data-tab="linktester">
+      <span class="nav-icon">⬡</span>
+      <span>Link Tester</span>
+      <span class="nav-arrow">›</span>
+    </button>
+    <button class="nav-item" data-tab="stats">
+      <span class="nav-icon">⬡</span>
+      <span>Model Stats</span>
+      <span class="nav-arrow">›</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="history-label">
+      <span>Scan History</span>
+      <span class="history-count" id="historyCount">0</span>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="history-empty">No scans yet</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN PANEL ───────────────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- ── TAB: EMAIL SCANNER ─────────────────────────────────────────────────── -->
+  <section class="tab-panel active" id="tab-scanner">
+    <div class="panel-header">
+      <div>
+        <h1 class="panel-title">Email Threat Scanner</h1>
+        <p class="panel-sub">Paste a suspicious email to analyze it for phishing, spam signals &amp; malicious links.</p>
+      </div>
+      <div class="threat-counter">
+        <span id="totalScans">0</span>
+        <span class="threat-label">Total Scans</span>
+      </div>
+    </div>
+
+    <div class="glass-card input-card">
+      <div class="card-label">
+        <span class="dot cyan"></span>
+        INPUT · EMAIL CONTENT
+      </div>
+      <textarea id="emailInput" class="email-textarea" placeholder="Paste email content here…&#10;&#10;Subject: You've won $1,000,000!&#10;Click here to claim your prize: http://suspicious-link.tk/claim&#10;…"></textarea>
+      <div class="input-actions">
+        <span class="char-count" id="charCount">0 / 10,000</span>
+        <button class="btn-ghost" id="clearBtn">Clear</button>
+        <button class="btn-primary" id="analyzeBtn">
+          <span class="btn-icon">▶</span>
+          Analyze Threat
+        </button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsArea" class="results-area hidden">
+      <div class="results-grid">
+
+        <!-- Verdict card -->
+        <div class="glass-card verdict-card" id="verdictCard">
+          <div class="card-label">
+            <span class="dot" id="verdictDot"></span>
+            THREAT VERDICT
+          </div>
+          <div class="verdict-main">
+            <div class="verdict-icon" id="verdictIcon">◉</div>
+            <div class="verdict-text" id="verdictText">—</div>
+          </div>
+          <div class="verdict-confidence" id="verdictConfidence"></div>
+          <div class="verdict-meta" id="verdictMeta"></div>
+        </div>
+
+        <!-- Risk score card -->
+        <div class="glass-card risk-card">
+          <div class="card-label">
+            <span class="dot amber"></span>
+            DOMAIN RISK SCORE
+          </div>
+          <div class="risk-gauge-wrap">
+            <canvas id="riskGauge" width="160" height="90"></canvas>
+            <div class="risk-score-label" id="riskScoreLabel">0</div>
+          </div>
+          <div class="risk-bar-wrap">
+            <div class="risk-bar-track">
+              <div class="risk-bar-fill" id="riskBarFill" style="width:0%"></div>
+            </div>
+            <span class="risk-bar-text" id="riskBarText">Low Risk</span>
+          </div>
+        </div>
+
+        <!-- URLs card -->
+        <div class="glass-card urls-card">
+          <div class="card-label">
+            <span class="dot red"></span>
+            SUSPICIOUS LINKS · <span id="urlCount">0</span> found
+          </div>
+          <div class="links-list" id="linksList">
+            <div class="no-links">No suspicious URLs detected</div>
+          </div>
+        </div>
+
+        <!-- Keywords card -->
+        <div class="glass-card keywords-card">
+          <div class="card-label">
+            <span class="dot purple"></span>
+            SPAM KEYWORDS DETECTED
+          </div>
+          <div class="keywords-wrap" id="keywordsWrap">
+            <span class="no-keywords">None detected</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="scanLoader" class="scan-loader hidden">
+      <div class="loader-ring"></div>
+      <div class="loader-text">Scanning threat vectors<span class="dots"></span></div>
+    </div>
+
+  </section>
+
+  <!-- ── TAB: LINK TESTER ───────────────────────────────────────────────────── -->
+  <section class="tab-panel" id="tab-linktester">
+    <div class="panel-header">
+      <div>
+        <h1 class="panel-title">Link Threat Tester</h1>
+        <p class="panel-sub">Enter any URL to check its domain reputation, phishing signals &amp; risk score.</p>
+      </div>
+    </div>
+
+    <div class="glass-card input-card" style="max-width:680px">
+      <div class="card-label">
+        <span class="dot cyan"></span>
+        URL INPUT
+      </div>
+      <div class="url-input-row">
+        <input type="text" id="urlInput" class="url-input" placeholder="https://suspicious-domain.tk/phish?id=123" />
+        <button class="btn-primary" id="checkUrlBtn">
+          <span class="btn-icon">⚡</span>
+          Check Link
+        </button>
+      </div>
+    </div>
+
+    <div id="linkResults" class="link-results hidden">
+      <div class="glass-card link-result-card">
+        <div class="link-result-header">
+          <div class="link-verdict-badge" id="linkVerdictBadge">—</div>
+          <div class="link-domain-text" id="linkDomainText">—</div>
+        </div>
+        <div class="link-detail-grid">
+          <div class="link-detail-item">
+            <span class="link-detail-label">Risk Score</span>
+            <span class="link-detail-val" id="linkRiskVal">—</span>
+          </div>
+          <div class="link-detail-item">
+            <span class="link-detail-label">Domain Flag</span>
+            <span class="link-detail-val" id="linkFlagVal">—</span>
+          </div>
+          <div class="link-detail-item">
+            <span class="link-detail-label">Status</span>
+            <span class="link-detail-val" id="linkStatusVal">—</span>
+          </div>
+        </div>
+        <div class="flags-section" id="flagsSection" style="display:none">
+          <div class="card-label" style="margin-top:1rem">
+            <span class="dot red"></span>THREAT FLAGS
+          </div>
+          <ul class="flags-list" id="flagsList"></ul>
+        </div>
+        <div class="link-risk-bar-wrap">
+          <div class="risk-bar-track">
+            <div class="risk-bar-fill" id="linkRiskFill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── TAB: MODEL STATS ───────────────────────────────────────────────────── -->
+  <section class="tab-panel" id="tab-stats">
+    <div class="panel-header">
+      <div>
+        <h1 class="panel-title">Model Intelligence Report</h1>
+        <p class="panel-sub">Performance metrics for the deployed ML classification model.</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="glass-card metric-card" id="mc-accuracy">
+        <div class="metric-icon">◎</div>
+        <div class="metric-val" id="statAccuracy">—</div>
+        <div class="metric-label">Accuracy</div>
+        <div class="metric-bar"><div class="metric-bar-fill" id="barAccuracy"></div></div>
+      </div>
+      <div class="glass-card metric-card" id="mc-precision">
+        <div class="metric-icon">◈</div>
+        <div class="metric-val" id="statPrecision">—</div>
+        <div class="metric-label">Precision</div>
+        <div class="metric-bar"><div class="metric-bar-fill" id="barPrecision"></div></div>
+      </div>
+      <div class="glass-card metric-card" id="mc-recall">
+        <div class="metric-icon">◐</div>
+        <div class="metric-val" id="statRecall">—</div>
+        <div class="metric-label">Recall</div>
+        <div class="metric-bar"><div class="metric-bar-fill" id="barRecall"></div></div>
+      </div>
+      <div class="glass-card metric-card" id="mc-f1">
+        <div class="metric-icon">◑</div>
+        <div class="metric-val" id="statF1">—</div>
+        <div class="metric-label">F1 Score</div>
+        <div class="metric-bar"><div class="metric-bar-fill" id="barF1"></div></div>
+      </div>
+    </div>
+
+    <div class="stats-bottom-grid">
+      <div class="glass-card cm-card">
+        <div class="card-label">
+          <span class="dot cyan"></span>CONFUSION MATRIX
+        </div>
+        <div class="cm-chart-wrap">
+          <canvas id="confusionMatrix"></canvas>
+        </div>
+      </div>
+
+      <div class="glass-card model-info-card">
+        <div class="card-label">
+          <span class="dot purple"></span>MODEL DETAILS
+        </div>
+        <div class="model-info-list">
+          <div class="info-row">
+            <span class="info-label">Algorithm</span>
+            <span class="info-val" id="modelType">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Training Samples</span>
+            <span class="info-val" id="trainSamples">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Feature Extraction</span>
+            <span class="info-val">TF-IDF Vectorizer</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Classes</span>
+            <span class="info-val">Spam / Not Spam</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Deployment</span>
+            <span class="info-val cyan">Active · Render</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

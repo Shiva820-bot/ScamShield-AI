@@ -1,0 +1,36 @@
+{
+  "accuracy": 95.51,
+  "precision": 94.7,
+  "recall": 96.17,
+  "f1_score": 95.43,
+  "cv_f1_mean": 95.49,
+  "cv_f1_std": 0.14,
+  "model_type": "LogisticRegression",
+  "vectorizer_type": "TfidfVectorizer",
+  "max_features": 75000,
+  "ngram_range": "1-2",
+  "training_samples": 107732,
+  "test_samples": 26933,
+  "total_samples": 134665,
+  "spam_count": 65609,
+  "ham_count": 69056,
+  "datasets_loaded": 8,
+  "dataset_files": [
+    "CEAS_08.csv",
+    "Enron.csv",
+    "Ling.csv",
+    "Nazario.csv",
+    "Nigerian_Fraud.csv",
+    "SPAM text message 20170820 - Data.csv",
+    "SpamAssasin.csv",
+    "phishing_email.csv",
+    "spam.csv",
+    "synthetic_indian_upi_fraud_data.csv"
+  ],
+  "confusion_matrix": {
+    "tn": 13105,
+    "fp": 706,
+    "fn": 503,
+    "tp": 12619
+  }
+}
