@@ -91,7 +91,11 @@ def ml_predict(text):
             vec = vectorizer.transform([text])
             pred = model.predict(vec)[0]
             proba = model.predict_proba(vec)[0] if hasattr(model, 'predict_proba') else None
-            label = "Spam" if str(pred) in ["1","spam","Spam"] else "Not Spam"
+            # FIX: convert to float first to handle both int and float predictions
+            try:
+                label = "Spam" if int(float(str(pred))) == 1 else "Not Spam"
+            except (ValueError, TypeError):
+                label = "Spam" if str(pred).lower() in ["spam","yes","junk"] else "Not Spam"
             return label, (float(max(proba)) * 100 if proba is not None else None)
         except Exception as e:
             print(f"ML error: {e}")
